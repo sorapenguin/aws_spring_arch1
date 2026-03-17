@@ -1,0 +1,16 @@
+C:\ドキュメント\ワーク制作用Springboot\aws_spring_arch\src\main\java\com\example\pingt\config\DataInitializer.java
+C:\ドキュメント\ワーク制作用Springboot\aws_spring_arch\src\main\java\com\example\pingt\domain\PracticeRecord.java
+C:\ドキュメント\ワーク制作用Springboot\aws_spring_arch\src\main\java\com\example\pingt\domain\Question.java
+C:\ドキュメント\ワーク制作用Springboot\aws_spring_arch\src\main\java\com\example\pingt\domain\QuestionChoice.java
+C:\ドキュメント\ワーク制作用Springboot\aws_spring_arch\src\main\java\com\example\pingt\domain\User.java
+C:\ドキュメント\ワーク制作用Springboot\aws_spring_arch\src\main\java\com\example\pingt\PingtApplication.java
+C:\ドキュメント\ワーク制作用Springboot\aws_spring_arch\src\main\java\com\example\pingt\repository\PracticeRecordRepository.java
+C:\ドキュメント\ワーク制作用Springboot\aws_spring_arch\src\main\java\com\example\pingt\repository\QuestionRepository.java
+C:\ドキュメント\ワーク制作用Springboot\aws_spring_arch\src\main\java\com\example\pingt\repository\UserRepository.java
+C:\ドキュメント\ワーク制作用Springboot\aws_spring_arch\src\main\java\com\example\pingt\service\PracticeRecordService.java
+C:\ドキュメント\ワーク制作用Springboot\aws_spring_arch\src\main\java\com\example\pingt\service\QuestionService.java
+C:\ドキュメント\ワーク制作用Springboot\aws_spring_arch\src\main\java\com\example\pingt\service\UserService.java
+C:\ドキュメント\ワーク制作用Springboot\aws_spring_arch\src\main\java\com\example\pingt\web\PracticeController.java
+C:\ドキュメント\ワーク制作用Springboot\aws_spring_arch\src\main\java\com\example\pingt\web\QuestionController.java
+C:\ドキュメント\ワーク制作用Springboot\aws_spring_arch\src\main\java\com\example\pingt\web\RandomPracticeController.java
+C:\ドキュメント\ワーク制作用Springboot\aws_spring_arch\src\main\java\com\example\pingt\web\UserController.java

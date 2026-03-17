@@ -1,0 +1,6 @@
+このプロジェクトは Spring Boot プロジェクトです。
+- 言語: Java 17 (または使用しているバージョン)
+- ビルドツール: Maven (または Gradle)
+- テンプレートエンジン: Thymeleaf
+- 命名規則: Spring Boot の標準的な命名規則（Controller, Service, Repository, Entity）に従ってください。
+- 実装スタイル: Lombok を活用して、Getter/Setter などの定型コードを簡略化してください。
