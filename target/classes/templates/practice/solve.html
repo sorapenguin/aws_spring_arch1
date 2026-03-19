@@ -10,34 +10,133 @@
 
   <div class="card mb-3">
     <div class="card-body">
-      <div class="text-muted small mb-2">ID: <span th:text="${question.id}">1</span></div>
+      <div class="text-muted small mb-2">ID: <span id="question-id" th:text="${question.id}">1</span></div>
       <div class="fs-5 fw-semibold" th:text="${question.statement}">statement</div>
     </div>
   </div>
 
-  <form th:action="@{|/practice/${question.id}/answer|}" method="post">
-    <div class="list-group mb-3">
-      <label class="list-group-item d-flex gap-2">
-        <input class="form-check-input flex-shrink-0" type="radio" name="selectedChoice" value="A" required>
+  <form id="quizForm">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+    
+    <div class="list-group mb-3" id="choicesGroup">
+      <label class="list-group-item d-flex gap-2 choice-label" data-choice="A">
+        <input class="form-check-input flex-shrink-0" type="radio" name="selectedChoice" value="A">
         <span><span class="fw-semibold me-2">A</span><span th:text="${question.choiceA}">A</span></span>
       </label>
-      <label class="list-group-item d-flex gap-2">
-        <input class="form-check-input flex-shrink-0" type="radio" name="selectedChoice" value="B" required>
+      <label class="list-group-item d-flex gap-2 choice-label" data-choice="B">
+        <input class="form-check-input flex-shrink-0" type="radio" name="selectedChoice" value="B">
         <span><span class="fw-semibold me-2">B</span><span th:text="${question.choiceB}">B</span></span>
       </label>
-      <label class="list-group-item d-flex gap-2">
-        <input class="form-check-input flex-shrink-0" type="radio" name="selectedChoice" value="C" required>
+      <label class="list-group-item d-flex gap-2 choice-label" data-choice="C">
+        <input class="form-check-input flex-shrink-0" type="radio" name="selectedChoice" value="C">
         <span><span class="fw-semibold me-2">C</span><span th:text="${question.choiceC}">C</span></span>
       </label>
-      <label class="list-group-item d-flex gap-2">
-        <input class="form-check-input flex-shrink-0" type="radio" name="selectedChoice" value="D" required>
+      <label class="list-group-item d-flex gap-2 choice-label" data-choice="D">
+        <input class="form-check-input flex-shrink-0" type="radio" name="selectedChoice" value="D">
         <span><span class="fw-semibold me-2">D</span><span th:text="${question.choiceD}">D</span></span>
       </label>
     </div>
-
-    <button class="btn btn-success" type="submit">解答する</button>
+    <button class="btn btn-success" type="submit" id="submitBtn">解答する</button>
   </form>
+
+  <div id="explanationArea" class="mt-4" style="display: none;">
+    <div class="card border-primary">
+      <div class="card-header bg-primary text-white fw-bold">解説</div>
+      <div class="card-body">
+        <div id="resultMessage" class="fs-5 mb-2"></div>
+        <p class="card-text" th:text="${question.explanation}">explanation</p>
+        <div class="mt-3">
+            <a th:href="@{/}" class="btn btn-outline-primary">トップへ戻る</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+/*<![CDATA[*/
+document.getElementById('quizForm').addEventListener('submit', function(e) {
+    e.preventDefault(); 
+
+    const submitBtn = document.getElementById('submitBtn');
+    if (submitBtn.getAttribute('data-action') === 'navigate') return; 
+
+    const explanationArea = document.getElementById('explanationArea');
+    const choices = document.querySelectorAll('.choice-label');
+    const questionId = /*[[${question.id}]]*/ 0;
+    const correctChoice = /*[[${question.correctChoice}]]*/ 'A'; 
+    const nextId = /*[[${nextQuestionId}]]*/ null;
+    const csrfToken = document.querySelector('input[name="_csrf"]').value;
+
+    // 選択状態を取得（未選択でもエラーにしない）
+    const selectedInput = document.querySelector('input[name="selectedChoice"]:checked');
+
+    submitBtn.disabled = true;
+    submitBtn.innerText = "送信中...";
+
+    const params = new URLSearchParams();
+    params.append('selectedChoice', selectedInput ? selectedInput.value : "");
+
+    fetch(`/practice/${questionId}/answer`, {
+        method: 'POST',
+        body: params,
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRF-TOKEN': csrfToken
+        }
+    })
+    .then(async response => {
+        if (!response.ok) throw new Error("サーバーエラー");
+        return response.json();
+    })
+    .then(data => {
+        submitBtn.setAttribute('data-action', 'navigate');
+
+        // 正解の選択肢をハイライトし、他を薄くする
+        choices.forEach(label => {
+            const radioValue = label.getAttribute('data-choice');
+            if (radioValue === String(correctChoice)) {
+                label.classList.add('text-primary', 'fw-bold', 'border-primary', 'bg-light');
+            } else {
+                label.style.opacity = '0.6';
+            }
+            const input = label.querySelector('input');
+            if(input) input.disabled = true;
+        });
+
+        // メッセージ表示（正解・不正解のみ。未選択時は自動的に不正解扱い）
+        const resultMessage = document.getElementById('resultMessage');
+        resultMessage.innerText = data.isCorrect ? "⭕ 正解！" : "❌ 不正解...";
+        resultMessage.className = data.isCorrect ? "fs-5 mb-2 text-success fw-bold" : "fs-5 mb-2 text-danger fw-bold";
+
+        // ボタンの切り替え
+        if (nextId) {
+            submitBtn.innerText = "次の問題へ";
+            submitBtn.className = "btn btn-primary btn-lg px-5 shadow";
+            submitBtn.onclick = function() { window.location.href = "/practice/random/next"; };
+        } else {
+            submitBtn.innerText = "結果を確認する";
+            submitBtn.className = "btn btn-info btn-lg px-5 shadow";
+            submitBtn.onclick = function() { window.location.href = "/practice/final-result"; };
+        }
+
+        submitBtn.disabled = false;
+        explanationArea.style.display = 'block';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        submitBtn.disabled = false;
+        submitBtn.innerText = "解答する";
+    });
+});
+/*]]>*/
+  </script>
+
+  <style>
+      .list-group-item.text-primary {
+          background-color: #f0f7ff;
+          border-width: 2px !important;
+      }
+  </style>
 </div>
 </body>
 </html>
-

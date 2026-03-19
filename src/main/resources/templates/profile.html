@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('学習進捗')}"></head>
+<body th:replace="~{fragments/layout :: body(~{::content})}">
+<div th:fragment="content">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="fw-bold"><i class="bi bi-graph-up me-2"></i>学習進捗ダッシュボード</h2>
+            <p class="text-muted" th:text="${username} + ' さんの現在の状況です。'"></p>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center p-3 h-100">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">総回答数（延べ）</h6>
+                    <h2 class="fw-bold text-primary" th:text="${totalAnswers} + ' 回'">0 回</h2>
+                    <small class="text-muted">学習の積み重ね</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center p-3 h-100">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">クリア問題数</h6>
+                    <h2 class="fw-bold text-success" th:text="${masteredCount} + ' / ' + ${totalQuestions}">0 / 100</h2>
+                    <small class="text-muted">習得済みの問題数</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+    <div class="card border-0 shadow-sm text-center p-3 h-100">
+        <div class="card-body">
+            <h6 class="text-muted mb-2">全問題の網羅率</h6>
+            <h2 class="fw-bold text-info">
+                <span th:text="${(masteredCount + level1Count) * 100 / totalQuestions}">0</span>%
+            </h2>
+            
+            <div class="progress mt-3" style="height: 18px;">
+                <div class="progress-bar bg-primary" 
+                     role="progressbar" 
+                     th:style="'width: ' + (${masteredCount} * 100 / ${totalQuestions}) + '%'"
+                     th:title="'習得済み: ' + ${masteredCount}">
+                </div>
+                
+                <div class="progress-bar bg-info progress-bar-striped" 
+                     role="progressbar" 
+                     th:style="'width: ' + (${level1Count} * 100 / ${totalQuestions}) + '%'"
+                     th:title="'正解済み: ' + ${level1Count}">
+                </div>
+            </div>
+            
+            <div class="mt-2 small text-muted">
+                習得: <span th:text="${masteredCount}">0</span> / 
+                正解: <span th:text="${level1Count}">0</span>
+            </div>
+        </div>
+    </div>
+</div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2"></i>最近の学習履歴（最新5件）</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>日付</th>
+                        <th>問題内容</th>
+                        <th class="text-center">判定</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="record : ${recentRecords}">
+                        <td th:text="${#temporals.format(record.answeredAt, 'yyyy/MM/dd HH:mm')}"></td>
+                        <td th:text="${record.question.statement}" class="text-truncate" style="max-width: 400px;">問題内容</td>
+                        <td class="text-center">
+                            <span th:if="${record.correct}" class="badge bg-success-subtle text-success px-3 py-2">
+                                <i class="bi bi-check-circle-fill me-1"></i>正解
+                            </span>
+                            <span th:unless="${record.correct}" class="badge bg-danger-subtle text-danger px-3 py-2">
+                                <i class="bi bi-x-circle-fill me-1"></i>不正解
+                            </span>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(recentRecords)}">
+                        <td colspan="3" class="text-center py-5 text-muted">
+                            <i class="bi bi-emoji-neutral d-block fs-2 mb-2"></i>
+                            まだ学習履歴がありません。問題を解いてみましょう！
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div> </body>
+</html>

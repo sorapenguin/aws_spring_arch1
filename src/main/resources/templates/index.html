@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('トップページ')}"></head>
+<body th:replace="~{fragments/layout :: body(~{::content})}">
+<div th:fragment="content">
+
+  <div class="p-5 mb-4 bg-light rounded-3 border">
+    <div class="container-fluid py-5 text-center">
+      <h1 class="display-5 fw-bold">Java学習システム</h1>
+      <p class="fs-4 mt-3">
+        現在、<span class="text-primary fw-bold" th:text="${totalCount}">0</span> 問の問題が登録されています。
+      </p>
+      <div class="d-flex justify-content-center gap-3 mb-4">
+    <span class="badge bg-secondary">未回答: <span th:text="${totalCount - level1Count - masteredCount}">0</span></span>
+    <span class="badge bg-success">合格リーチ: <span th:text="${level1Count}">0</span></span>
+    <span class="badge bg-warning text-dark">習得済み: <span th:text="${masteredCount}">0</span></span>
+</div>
+    </div>
+  </div>
+
+  <div class="container mt-5">
+    <h3 class="text-center mb-4">学習メニュー</h3>
+    
+    <input type="hidden" id="json-data-bridge" th:value="${questionStatusList != null ? #objects.nullSafe(questionStatusList, '') : '[]'}">
+
+    <form th:action="@{/practice/random/start}" method="get" id="startForm">
+        <div class="text-center mb-4">
+            <h5 class="mb-3">出題数を選択</h5>
+            <div class="d-flex justify-content-center gap-3">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="limit" id="limit1" value="1" checked>
+                    <label class="form-check-label" for="limit1">1問</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="limit" id="limit3" value="3">
+                    <label class="form-check-label" for="limit3">3問</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="limit" id="limit5" value="5">
+                    <label class="form-check-label" for="limit5">5問</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="limit" id="limitAll" value="999">
+                    <label class="form-check-label" for="limitAll">すべて</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 justify-content-center">
+            <div class="col-6 col-md-3">
+                <input type="checkbox" class="btn-check" name="levels" value="0" id="level0" autocomplete="off">
+                <label class="btn btn-outline-primary w-100 py-3 shadow-sm" for="level0">
+                    <i class="bi bi-star d-block mb-2 fs-3"></i>未出題
+                </label>
+            </div>
+            <div class="col-6 col-md-3">
+                <input type="checkbox" class="btn-check" name="levels" value="-1" id="levelMinus1" autocomplete="off">
+                <label class="btn btn-outline-danger w-100 py-3 shadow-sm" for="levelMinus1">
+                    <i class="bi bi-exclamation-triangle d-block mb-2 fs-3"></i>間違い
+                </label>
+            </div>
+            <div class="col-6 col-md-3">
+                <input type="checkbox" class="btn-check" name="levels" value="1" id="level1" autocomplete="off">
+                <label class="btn btn-outline-success w-100 py-3 shadow-sm" for="level1">
+                    <i class="bi bi-check2-circle d-block mb-2 fs-3"></i>合格リーチ
+                </label>
+            </div>
+            <div class="col-6 col-md-3">
+                <input type="checkbox" class="btn-check" name="levels" value="2" id="level2" autocomplete="off">
+                <label class="btn btn-outline-warning w-100 py-3 shadow-sm" for="level2">
+                    <i class="bi bi-trophy d-block mb-2 fs-3"></i>習得済み
+                </label>
+            </div>
+        </div>
+
+        <div class="text-center mt-5">
+            <div id="selected-count-display" class="mb-3 p-2 border rounded bg-light d-inline-block" style="display: none;">
+                現在の条件に一致する問題数: <strong><span id="match-count">0</span></strong> 問
+            </div>
+            <br>
+            <button type="submit" class="btn btn-primary btn-lg px-5 shadow" id="startBtn" disabled>
+                選択した条件で開始
+            </button>
+        </div>
+    </form>
+  </div>
+
+<script th:inline="javascript">
+/*<![CDATA[*/
+    document.addEventListener('DOMContentLoaded', function() {
+        // ★修正ポイント：Thymeleafのインライン表記を使って直接配列を受け取る
+        // これにより、面倒な JSON.parse や隠し要素(json-data-bridge)が不要になります
+        const allQuestionStatus = /*[[${questionStatusList}]]*/ [];
+        
+        console.log("読み込まれたステータス一覧:", allQuestionStatus);
+
+        const checkBoxes = document.querySelectorAll('input[name="levels"]');
+        const matchCountSpan = document.getElementById('match-count');
+        const displayArea = document.getElementById('selected-count-display');
+        const startBtn = document.getElementById('startBtn');
+function updateUI() {
+    const selectedLevels = Array.from(checkBoxes)
+        .filter(i => i.checked)
+        .map(i => String(i.value));
+
+    // 1. まず問題数を数える
+    let count = 0;
+    if (allQuestionStatus && Array.isArray(allQuestionStatus)) {
+        count = allQuestionStatus.filter(item => {
+            const currentLevel = String(item.masteryLevel); 
+            return selectedLevels.includes(currentLevel);
+        }).length;
+    }
+
+    // 2. 表示の更新
+    matchCountSpan.textContent = count;
+
+    // 3. ボタンと表示エリアの制御
+    if (selectedLevels.length === 0) {
+        // 何も選んでない時
+        displayArea.style.display = 'none';
+        startBtn.disabled = true;
+    } else {
+        // 何か選んでいる時
+        displayArea.style.display = 'inline-block';
+        
+        // ★ここが大事：問題が0問ならボタンを無効化、1問以上なら有効化
+        if (count === 0) {
+            startBtn.disabled = true;
+            matchCountSpan.classList.add('text-danger'); // 0の時は赤字にする
+        } else {
+            startBtn.disabled = false;
+            matchCountSpan.classList.remove('text-danger'); // 1以上の時は赤字を消す
+        }
+    }
+}
+
+        // 全てのチェックボックスにイベントリスナーを設定
+        checkBoxes.forEach(box => box.addEventListener('change', updateUI));
+        
+        // 初期表示時にも実行
+        updateUI(); 
+    });
+/*]]>*/
+</script>
+
+  <!-- <div class="row g-4 py-5 row-cols-1 row-cols-lg-3 mt-5">
+    <div class="feature col">
+      <h2>豊富な問題</h2>
+      <p>Javaの基礎問題を解くことができます。</p>
+    </div>
+    <div class="feature col">
+      <h2>学習の記録</h2>
+      <p>解いた結果はデータベースに保存されます。</p>
+    </div>
+  </div> -->
+
+</div>
+</body>
+</html>
